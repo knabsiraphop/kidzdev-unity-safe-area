@@ -1,0 +1,25 @@
+{
+  "name": "KidzDev.Unity.SafeArea.Tests",
+  "rootNamespace": "KidzDev.Unity.SafeArea.Tests",
+  "references": [
+    "KidzDev.Unity.SafeArea",
+    "UnityEngine.UI",
+    "UnityEngine.TestRunner",
+    "UnityEditor.TestRunner"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "nunit.framework.dll"
+  ],
+  "autoReferenced": false,
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS"
+  ],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
