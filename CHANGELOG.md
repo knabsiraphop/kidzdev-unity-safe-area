@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-06-28
+
+### Removed
+
+- The `logging` serialized debug field from `SafeArea` and `SafeAreaOutsideMask`.
+  Neither component exposes a per-instance console-logging toggle anymore.
+
+### Changed
+
+- Demo sample scene polish.
+
 ## [1.0.0] - 2026-06-28
 
 ### Added

@@ -25,9 +25,6 @@ namespace KidzDev.Unity.SafeArea
         [Tooltip("Constrain the vertical axis (top/bottom insets). Disable to ignore the notch / home bar.")]
         [SerializeField] bool conformY = true;
 
-        [Tooltip("Log each applied safe area to the console (debugging aid).")]
-        [SerializeField] bool logging = false;
-
         /// <summary>Constrain the horizontal axis. Assigning re-applies on the next tick.</summary>
         public bool ConformX
         {
@@ -74,13 +71,6 @@ namespace KidzDev.Unity.SafeArea
 
             Panel.anchorMin = anchorMin;
             Panel.anchorMax = anchorMax;
-
-            if (logging)
-            {
-                Debug.LogFormat(this,
-                    "[SafeArea] {0}: x={1}, y={2}, w={3}, h={4} on screen {5}x{6}",
-                    name, safeArea.x, safeArea.y, safeArea.width, safeArea.height, Screen.width, Screen.height);
-            }
         }
     }
 }

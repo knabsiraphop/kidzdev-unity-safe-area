@@ -1,6 +1,6 @@
 {
   "name": "com.kidzdev.unity.safe-area",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "displayName": "KidzDev Unity Safe Area",
   "description": "Two complementary notch / safe-area components for Unity uGUI. SafeArea shrinks a RectTransform to fit inside the device safe area; SafeAreaOutsideMask fills the region outside it with colour bars. Both share one change-tracking core, honour an in-editor device simulator (iPhone X/Xs Max, Pixel 3 XL), guard against Samsung first-frame NaN, and support per-axis ConformX/ConformY control.",
   "unity": "6000.0",

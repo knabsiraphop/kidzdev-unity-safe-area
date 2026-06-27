@@ -49,9 +49,6 @@ namespace KidzDev.Unity.SafeArea
         [Tooltip("Let the bars block touches that land on the cutout zones.")]
         [SerializeField] bool raycastTarget = true;
 
-        [Tooltip("Log each applied safe area to the console (debugging aid).")]
-        [SerializeField] bool logging = false;
-
         readonly RectTransform[] _bars = new RectTransform[BarCount];
 
         /// <summary>Mask the left/right cutouts. Assigning rebuilds the bars on the next tick.</summary>
@@ -170,13 +167,6 @@ namespace KidzDev.Unity.SafeArea
             SetBar(Right, new Vector2(mx, 0f), new Vector2(1f, 1f));
             SetBar(Bottom, new Vector2(loX, 0f), new Vector2(hiX, sy));
             SetBar(Top, new Vector2(loX, my), new Vector2(hiX, 1f));
-
-            if (logging)
-            {
-                Debug.LogFormat(this,
-                    "[SafeAreaOutsideMask] {0}: safe x={1} y={2} w={3} h={4} on screen {5}x{6}",
-                    name, safe.x, safe.y, safe.width, safe.height, Screen.width, Screen.height);
-            }
         }
 
         void SetBar(int index, Vector2 anchorMin, Vector2 anchorMax)
