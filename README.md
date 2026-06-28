@@ -16,7 +16,7 @@ Add via Package Manager → *Add package from git URL*, or edit
 `Packages/manifest.json`:
 
 ```
-https://github.com/knabsiraphop/kidzdev-unity-safe-area.git#v1.0.1
+https://github.com/knabsiraphop/kidzdev-unity-safe-area.git#v1.0.2
 ```
 
 ---
@@ -58,6 +58,17 @@ full screen.
 var safe = panel.GetComponent<SafeArea>();
 safe.ConformX = false; // ignore left/right insets, keep top/bottom
 safe.ConformY = true;  // re-applies automatically on the next tick
+```
+
+**`ZeroOffsets` (robust setup)**
+
+`SafeArea` drives anchors only, so it assumes the panel's `offsetMin`/`offsetMax`
+are already `0` (step 2 above). If you can't guarantee that — e.g. the panel is
+reused with leftover offsets — enable **`ZeroOffsets`** and the component will also
+clear the offsets each time it applies, so the panel fills the safe area exactly:
+
+```csharp
+safe.ZeroOffsets = true; // also resets offsetMin/offsetMax to zero on apply
 ```
 
 ---
@@ -133,14 +144,64 @@ Rect pixels     = SafeAreaSimulator.Simulated(SimDevice.iPhoneX, 1125, 2436);
 
 ## How it updates
 
-`SafeAreaTracker` (the shared base) polls once per frame and re-applies only when
-the resolved safe area, screen size, or orientation actually changes — so an idle
-safe-area object does no work beyond a few comparisons. Inspector edits flag the
-component dirty (via `OnValidate`) and re-apply on the next tick. Both components
-run in edit mode (`[ExecuteAlways]`).
+Unity raises no "safe area changed" event, so the safe area has to be polled.
+Rather than give every component its own `Update`, each `SafeAreaTracker`
+registers (while enabled) with a single internal `SafeAreaDriver` that polls
+**once per frame for all trackers** and calls `Apply` only when the resolved safe
+area, screen size, or orientation actually changes — or when an individual tracker
+is flagged dirty (an `OnValidate` inspector edit, or a `ConformX`/`ConformY`
+change). So N safe-area objects cost one poll per frame, not N.
 
-A first-frame `NaN` safe area (seen on some Samsung devices) is detected and
-skipped until valid.
+The driver ticks on `EditorApplication.update` in the editor (covering edit and
+play mode — both components are `[ExecuteAlways]`) and on a single hidden pump
+object in a player build. A first-frame `NaN` safe area (seen on some Samsung
+devices) is detected and skipped until valid.
+
+---
+
+## Platform notes
+
+The components read `Screen.safeArea`, which is the OS source of truth on both
+platforms, so they handle notches, the Dynamic Island, the home indicator,
+rounded corners, foldables, split-screen and rotation generically — no per-device
+tables at runtime. A few platform specifics worth knowing:
+
+### iOS
+
+Works out of the box. iOS always renders edge-to-edge and reports correct insets
+for the notch / Dynamic Island / home indicator.
+
+### Android
+
+`Screen.safeArea` only reports a cutout inset when your app actually draws into
+the cutout region. Set **Player Settings → Resolution and Presentation → Render
+outside safe area = ON** if you want content (or a `SafeAreaOutsideMask`) to reach
+into the cutout. With it **off**, Android letterboxes around the cutout and
+`Screen.safeArea` equals the full screen — which is also handled correctly (no
+shrink, no bars), there is just nothing to mask.
+
+### Rotation
+
+On some devices `Screen.width`/`height` and `Screen.safeArea` update on slightly
+different frames during a rotation, which can cause a one-frame transient before
+the layout settles. The per-frame poll re-applies as soon as either value
+changes, so it self-corrects immediately. (This affects every safe-area solution,
+not just this one.)
+
+### Correct RectTransform setup
+
+`SafeArea` drives anchors only. Put it on a rect that is stretched to its parent
+with **zero offsets**, or enable **`ZeroOffsets`** (see above) so it clears the
+offsets for you. A `SafeAreaOutsideMask` must sit on a **full-screen** rect
+(anchors `0,0`–`1,1`, offsets `0`) — never combine it with a `SafeArea` on the
+same object (the shared base enforces this via `[DisallowMultipleComponent]`).
+
+### Editor simulator vs. device
+
+The `SimDevice` simulator is **editor-only** (`Application.isEditor`); a player
+build always uses the real `Screen.safeArea`, so simulation can never leak into
+production. The Unity **Device Simulator** window works too — its reported safe
+area flows straight through.
 
 ---
 

@@ -3,72 +3,63 @@ using UnityEngine;
 namespace KidzDev.Unity.SafeArea
 {
     /// <summary>
-    /// Shared base for safe-area components. Watches the resolved safe area, screen size and orientation,
-    /// and invokes <see cref="Apply"/> only when one of them actually changes — or when a re-apply is
-    /// forced via <see cref="SetDirty"/> (e.g. after an inspector edit). Subclasses decide what to do with
-    /// the safe area in <see cref="Apply"/>.
-    ///
-    /// The single per-frame poll mirrors the proven Crystal SafeArea approach: the comparison is a handful
-    /// of value checks and nothing is touched on an idle frame.
+    /// Shared base for safe-area components. Rather than each component polling in its own <c>Update</c>,
+    /// every tracker registers with <see cref="SafeAreaDriver"/> while enabled; the driver polls once per
+    /// frame for all trackers and calls <see cref="Apply"/> only when the resolved safe area, screen size or
+    /// orientation changes — or when this tracker is individually flagged via <see cref="SetDirty"/> (an
+    /// inspector edit, or a ConformX/ConformY change). Subclasses decide what to do with the safe area.
     /// </summary>
     [RequireComponent(typeof(RectTransform))]
     [DisallowMultipleComponent]
     public abstract class SafeAreaTracker : MonoBehaviour
     {
-        /// <summary>The RectTransform this component is attached to. Cached on Awake.</summary>
+        /// <summary>The RectTransform this component is attached to. Cached on first use.</summary>
         protected RectTransform Panel { get; private set; }
 
-        Rect _lastSafeArea = new Rect(0f, 0f, 0f, 0f);
-        Vector2Int _lastScreenSize = new Vector2Int(0, 0);
-        ScreenOrientation _lastOrientation = ScreenOrientation.AutoRotation;
         bool _dirty = true;
 
         protected virtual void Awake()
         {
             CachePanel();
-            SetDirty();
         }
 
         protected virtual void OnEnable()
         {
-            SetDirty();
+            _dirty = true;                  // apply on the first driver tick after enable
+            SafeAreaDriver.Register(this);
+        }
+
+        protected virtual void OnDisable()
+        {
+            SafeAreaDriver.Unregister(this);
         }
 
         protected virtual void OnValidate()
         {
             // Inspector edits can fire in a phase where creating/destroying objects is illegal, so we only
-            // raise the flag here and let the next Update tick do the real work.
-            SetDirty();
+            // raise the flag here and let the next driver tick do the real work.
+            _dirty = true;
         }
 
-        /// <summary>Forces <see cref="Apply"/> to run on the next Update tick regardless of change detection.</summary>
+        /// <summary>Forces <see cref="Apply"/> to run on the next driver tick regardless of change detection.</summary>
         protected void SetDirty()
         {
             _dirty = true;
         }
 
-        void Update()
+        /// <summary>
+        /// Called by <see cref="SafeAreaDriver"/> once per frame. <paramref name="globalChanged"/> is true
+        /// when the resolved safe area, screen size or orientation changed since the previous tick.
+        /// </summary>
+        internal void DriverTick(Rect safeArea, bool globalChanged)
         {
-            Rect safeArea = SafeAreaSimulator.Resolve();
-
-            if (!_dirty
-                && safeArea == _lastSafeArea
-                && Screen.width == _lastScreenSize.x
-                && Screen.height == _lastScreenSize.y
-                && Screen.orientation == _lastOrientation)
-            {
+            if (!_dirty && !globalChanged)
                 return;
-            }
 
             if (Panel == null)
                 CachePanel();
 
             Apply(safeArea);
-
-            _lastSafeArea = safeArea;
-            _lastScreenSize.x = Screen.width;
-            _lastScreenSize.y = Screen.height;
-            _lastOrientation = Screen.orientation;
             _dirty = false;
         }
 

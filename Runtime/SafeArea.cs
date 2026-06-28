@@ -25,6 +25,10 @@ namespace KidzDev.Unity.SafeArea
         [Tooltip("Constrain the vertical axis (top/bottom insets). Disable to ignore the notch / home bar.")]
         [SerializeField] bool conformY = true;
 
+        [Tooltip("Also reset offsetMin/offsetMax to zero so the panel exactly fills the safe area even when " +
+                 "its offsets were non-zero. Leave off to drive anchors only (classic behaviour).")]
+        [SerializeField] bool zeroOffsets = false;
+
         /// <summary>Constrain the horizontal axis. Assigning re-applies on the next tick.</summary>
         public bool ConformX
         {
@@ -37,6 +41,16 @@ namespace KidzDev.Unity.SafeArea
         {
             get => conformY;
             set { conformY = value; SetDirty(); }
+        }
+
+        /// <summary>
+        /// When true, also zeroes <c>offsetMin</c>/<c>offsetMax</c> so the panel fills the safe area exactly
+        /// regardless of any prior offsets. Assigning re-applies on the next tick.
+        /// </summary>
+        public bool ZeroOffsets
+        {
+            get => zeroOffsets;
+            set { zeroOffsets = value; SetDirty(); }
         }
 
         protected override void Apply(Rect safeArea)
@@ -71,6 +85,12 @@ namespace KidzDev.Unity.SafeArea
 
             Panel.anchorMin = anchorMin;
             Panel.anchorMax = anchorMax;
+
+            if (zeroOffsets)
+            {
+                Panel.offsetMin = Vector2.zero;
+                Panel.offsetMax = Vector2.zero;
+            }
         }
     }
 }
