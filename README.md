@@ -246,6 +246,24 @@ games using `SafeArea` to keep UI clear of the indicator.
 
 ---
 
+## Platform Settings window
+
+A small editor window checks — and one-click fixes — the project settings the
+runtime relies on (see **Platform notes** above). Open it from
+**Tools → KidzDev → Safe Area → Platform Settings**.
+
+![Safe Area Platform Settings](Documentation~/platform-settings.png)
+
+- **Android — Display Cutout Mode** reads `windowLayoutInDisplayCutoutMode` from
+  `Assets/Plugins/Android/AndroidManifest.xml`. **Apply Fix** sets it to `always`
+  (creating a minimal manifest if none exists).
+- **Android — Unity renderOutsideSafeArea** shows whether *Project Settings →
+  Player → Android → Render Outside Safe Area* is enabled.
+- **iOS — Hide Home Indicator** toggles `PlayerSettings.iOS.hideHomeButton`
+  (*Player → iOS → Hide Home Button*); **Apply** saves it.
+
+---
+
 ## License
 
 MIT — see [LICENSE.md](LICENSE.md).
