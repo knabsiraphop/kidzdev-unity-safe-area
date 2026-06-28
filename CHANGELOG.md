@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-06-28
+
+### Added
+
+- **Editor — Safe Area Platform Settings window** (`Tools > KidzDev > Safe Area > Platform Settings`):
+  a one-stop Editor window for the two platform settings that most affect safe-area behaviour.
+  - **Android** panel: reads the project's `AndroidManifest.xml` and reports whether
+    `android:windowLayoutInDisplayCutoutMode` is set to `"always"` on the launcher activity.
+    Colour-coded status (`Correct` / `Needs Fix` / `No Manifest`). An **Apply Fix** button
+    creates the manifest (or patches the existing one) so cutout content renders into the notch.
+    Also shows the Unity `renderOutsideSafeArea` player-setting with a direct path hint.
+  - **iOS** panel: exposes `PlayerSettings.iOS.hideHomeButton` as a toggle so the home indicator
+    can be hidden without navigating to Project Settings.
+- `Editor/KidzDev.Unity.SafeArea.Editor.asmdef` — new editor-only assembly for the above window
+  and any future editor tooling.
+
+### Changed
+
+- Internal rename: `SetDirty()` → `RequestApply()`, `_dirty` → `_pendingApply`,
+  `DriverTick()` → `OnPoll()`, and matching field names in `SafeAreaDriver`
+  (`_lastSafeArea` → `_lastKnownSafeArea`, etc.). Public observable behaviour is unchanged.
+- `SafeAreaOutsideMask`: bar anchors are now applied **before** the bar is activated
+  (`SetActive(true)`) so the bar never appears at a stale size for one frame.
+
 ## [1.0.2] - 2026-06-28
 
 ### Added

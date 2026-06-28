@@ -55,21 +55,21 @@ namespace KidzDev.Unity.SafeArea
         public bool ConformX
         {
             get => conformX;
-            set { conformX = value; SetDirty(); }
+            set { conformX = value; RequestApply(); }
         }
 
-        /// <summary>Mask the top/bottom cutouts. Assigning rebuilds the bars on the next tick.</summary>
+        /// <summary>Mask the top/bottom cutouts. Assigning rebuilds the bars on the next poll cycle.</summary>
         public bool ConformY
         {
             get => conformY;
-            set { conformY = value; SetDirty(); }
+            set { conformY = value; RequestApply(); }
         }
 
-        /// <summary>Bar fill colour. Assigning re-styles the bars on the next tick.</summary>
+        /// <summary>Bar fill colour. Assigning re-styles the bars on the next poll cycle.</summary>
         public Color BarColor
         {
             get => barColor;
-            set { barColor = value; SetDirty(); }
+            set { barColor = value; RequestApply(); }
         }
 
         protected override void Apply(Rect safeArea)
@@ -177,16 +177,22 @@ namespace KidzDev.Unity.SafeArea
 
             // Zero-area bar (no cutout on that edge) -> disable to skip layout, raycast and the draw call.
             bool hasArea = (anchorMax.x - anchorMin.x) > Epsilon && (anchorMax.y - anchorMin.y) > Epsilon;
-            if (bar.gameObject.activeSelf != hasArea)
-                bar.gameObject.SetActive(hasArea);
 
             if (!hasArea)
+            {
+                if (bar.gameObject.activeSelf)
+                    bar.gameObject.SetActive(false);
                 return;
+            }
 
+            // Apply anchors before activating so the bar never appears at a stale/wrong size for one frame.
             bar.anchorMin = anchorMin;
             bar.anchorMax = anchorMax;
             bar.offsetMin = Vector2.zero;
             bar.offsetMax = Vector2.zero;
+
+            if (!bar.gameObject.activeSelf)
+                bar.gameObject.SetActive(true);
         }
     }
 }

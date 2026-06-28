@@ -16,7 +16,7 @@ Add via Package Manager → *Add package from git URL*, or edit
 `Packages/manifest.json`:
 
 ```
-https://github.com/knabsiraphop/kidzdev-unity-safe-area.git#v1.0.2
+https://github.com/knabsiraphop/kidzdev-unity-safe-area.git#v1.1.0
 ```
 
 ---
@@ -202,6 +202,47 @@ The `SimDevice` simulator is **editor-only** (`Application.isEditor`); a player
 build always uses the real `Screen.safeArea`, so simulation can never leak into
 production. The Unity **Device Simulator** window works too — its reported safe
 area flows straight through.
+
+---
+
+## Safe Area Platform Settings (Editor window)
+
+Open via **Tools > KidzDev > Safe Area > Platform Settings**.
+
+A single window surfaces the two project-level settings that most affect safe-area
+behaviour on device — no more hunting through Player Settings or the AndroidManifest.
+
+### Android — Display Cutout Mode
+
+The window reads your project's `Assets/Plugins/Android/AndroidManifest.xml` and
+checks whether the launcher `<activity>` has:
+
+```xml
+android:windowLayoutInDisplayCutoutMode="always"
+```
+
+| Status | Meaning |
+| --- | --- |
+| **Correct** (green) | The attribute is present and set to `always`. |
+| **Needs Fix** (amber) | The manifest exists but the attribute is missing or wrong. |
+| **No Manifest** (grey) | No `AndroidManifest.xml` found at the expected path. |
+
+Click **Apply Fix** to let the tool patch or create the manifest automatically.
+Without `always`, Android letterboxes around the cutout and `Screen.safeArea`
+equals the full screen — `SafeAreaOutsideMask` will produce no bars, which is
+technically correct but probably not what you want.
+
+The window also shows the Unity **Render Outside Safe Area** player setting
+(`Project Settings > Player > Android > Render outside safe area`). That toggle
+must be **on** if you want content (or a `SafeAreaOutsideMask`) to actually reach
+into the cutout region.
+
+### iOS — Hide Home Indicator
+
+The window exposes a **Hide Home Indicator** toggle that writes directly to
+`PlayerSettings.iOS.hideHomeButton`. When enabled, iOS hides the home bar after a
+short idle period, which maximises the visible screen area — especially useful for
+games using `SafeArea` to keep UI clear of the indicator.
 
 ---
 

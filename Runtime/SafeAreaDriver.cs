@@ -4,22 +4,22 @@ using UnityEngine;
 namespace KidzDev.Unity.SafeArea
 {
     /// <summary>
-    /// Single per-frame ticker for every <see cref="SafeAreaTracker"/>. Unity raises no "safe area changed"
+    /// Single per-frame poller for every <see cref="SafeAreaTracker"/>. Unity raises no "safe area changed"
     /// event, so the safe area must be polled — this collapses that poll into ONE place instead of an Update
     /// on each component. Trackers register while enabled and are notified only when the resolved safe area,
-    /// screen size or orientation changes (or when an individual tracker is dirtied).
+    /// screen size or orientation changes (or when an individual tracker has a pending apply).
     ///
-    /// The tick runs on <c>EditorApplication.update</c> in the editor (covering both edit and play mode) and
+    /// The poll runs on <c>EditorApplication.update</c> in the editor (covering both edit and play mode) and
     /// on a single hidden pump object in a player build, so no per-component Update is needed.
     /// </summary>
     static class SafeAreaDriver
     {
         static readonly List<SafeAreaTracker> _trackers = new List<SafeAreaTracker>(8);
 
-        static Rect _lastSafeArea;
-        static Vector2Int _lastScreen;
-        static ScreenOrientation _lastOrientation;
-        static bool _hasState;
+        static Rect _lastKnownSafeArea;
+        static Vector2Int _lastKnownScreen;
+        static ScreenOrientation _lastKnownOrientation;
+        static bool _initialized;
         static bool _editorHooked;
 
         public static void Register(SafeAreaTracker tracker)
@@ -33,8 +33,7 @@ namespace KidzDev.Unity.SafeArea
             if (!_editorHooked)
             {
                 _editorHooked = true;
-                // Fires in both edit mode and play mode while in the editor.
-                UnityEditor.EditorApplication.update += Tick;
+                UnityEditor.EditorApplication.update += Poll;
             }
 #endif
         }
@@ -53,33 +52,32 @@ namespace KidzDev.Unity.SafeArea
             go.AddComponent<Pump>();
         }
 
-        // The lone Update in the whole system: one call per frame for all trackers.
         sealed class Pump : MonoBehaviour
         {
-            void Update() => Tick();
+            void Update() => Poll();
         }
 #endif
 
-        static void Tick()
+        static void Poll()
         {
             if (_trackers.Count == 0)
                 return;
 
             Rect safeArea = SafeAreaSimulator.Resolve();
 
-            bool changed = !_hasState
-                || safeArea != _lastSafeArea
-                || Screen.width != _lastScreen.x
-                || Screen.height != _lastScreen.y
-                || Screen.orientation != _lastOrientation;
+            bool screenChanged = !_initialized
+                || safeArea != _lastKnownSafeArea
+                || Screen.width  != _lastKnownScreen.x
+                || Screen.height != _lastKnownScreen.y
+                || Screen.orientation != _lastKnownOrientation;
 
-            if (changed)
+            if (screenChanged)
             {
-                _lastSafeArea = safeArea;
-                _lastScreen.x = Screen.width;
-                _lastScreen.y = Screen.height;
-                _lastOrientation = Screen.orientation;
-                _hasState = true;
+                _lastKnownSafeArea      = safeArea;
+                _lastKnownScreen.x      = Screen.width;
+                _lastKnownScreen.y      = Screen.height;
+                _lastKnownOrientation   = Screen.orientation;
+                _initialized            = true;
             }
 
             // Iterate backwards so a tracker destroyed without OnDisable (e.g. domain reload) can be pruned.
@@ -92,7 +90,7 @@ namespace KidzDev.Unity.SafeArea
                     continue;
                 }
 
-                tracker.DriverTick(safeArea, changed);
+                tracker.OnPoll(safeArea, screenChanged);
             }
         }
     }

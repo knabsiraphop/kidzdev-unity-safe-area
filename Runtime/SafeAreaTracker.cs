@@ -6,8 +6,8 @@ namespace KidzDev.Unity.SafeArea
     /// Shared base for safe-area components. Rather than each component polling in its own <c>Update</c>,
     /// every tracker registers with <see cref="SafeAreaDriver"/> while enabled; the driver polls once per
     /// frame for all trackers and calls <see cref="Apply"/> only when the resolved safe area, screen size or
-    /// orientation changes — or when this tracker is individually flagged via <see cref="SetDirty"/> (an
-    /// inspector edit, or a ConformX/ConformY change). Subclasses decide what to do with the safe area.
+    /// orientation changes — or when this tracker has a pending apply flagged via <see cref="RequestApply"/>
+    /// (an inspector edit, or a ConformX/ConformY change). Subclasses decide what to do with the safe area.
     /// </summary>
     [RequireComponent(typeof(RectTransform))]
     [DisallowMultipleComponent]
@@ -16,7 +16,7 @@ namespace KidzDev.Unity.SafeArea
         /// <summary>The RectTransform this component is attached to. Cached on first use.</summary>
         protected RectTransform Panel { get; private set; }
 
-        bool _dirty = true;
+        bool _pendingApply = true;
 
         protected virtual void Awake()
         {
@@ -25,7 +25,7 @@ namespace KidzDev.Unity.SafeArea
 
         protected virtual void OnEnable()
         {
-            _dirty = true;                  // apply on the first driver tick after enable
+            _pendingApply = true;
             SafeAreaDriver.Register(this);
         }
 
@@ -37,30 +37,30 @@ namespace KidzDev.Unity.SafeArea
         protected virtual void OnValidate()
         {
             // Inspector edits can fire in a phase where creating/destroying objects is illegal, so we only
-            // raise the flag here and let the next driver tick do the real work.
-            _dirty = true;
+            // raise the flag here and let the next poll cycle do the real work.
+            _pendingApply = true;
         }
 
-        /// <summary>Forces <see cref="Apply"/> to run on the next driver tick regardless of change detection.</summary>
-        protected void SetDirty()
+        /// <summary>Requests <see cref="Apply"/> to run on the next poll cycle regardless of screen changes.</summary>
+        protected void RequestApply()
         {
-            _dirty = true;
+            _pendingApply = true;
         }
 
         /// <summary>
-        /// Called by <see cref="SafeAreaDriver"/> once per frame. <paramref name="globalChanged"/> is true
-        /// when the resolved safe area, screen size or orientation changed since the previous tick.
+        /// Called by <see cref="SafeAreaDriver"/> on each poll cycle. <paramref name="screenChanged"/> is true
+        /// when the resolved safe area, screen size or orientation changed since the previous poll.
         /// </summary>
-        internal void DriverTick(Rect safeArea, bool globalChanged)
+        internal void OnPoll(Rect safeArea, bool screenChanged)
         {
-            if (!_dirty && !globalChanged)
+            if (!_pendingApply && !screenChanged)
                 return;
 
             if (Panel == null)
                 CachePanel();
 
             Apply(safeArea);
-            _dirty = false;
+            _pendingApply = false;
         }
 
         void CachePanel()

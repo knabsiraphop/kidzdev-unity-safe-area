@@ -33,24 +33,24 @@ namespace KidzDev.Unity.SafeArea
         public bool ConformX
         {
             get => conformX;
-            set { conformX = value; SetDirty(); }
+            set { conformX = value; RequestApply(); }
         }
 
-        /// <summary>Constrain the vertical axis. Assigning re-applies on the next tick.</summary>
+        /// <summary>Constrain the vertical axis. Assigning re-applies on the next poll cycle.</summary>
         public bool ConformY
         {
             get => conformY;
-            set { conformY = value; SetDirty(); }
+            set { conformY = value; RequestApply(); }
         }
 
         /// <summary>
         /// When true, also zeroes <c>offsetMin</c>/<c>offsetMax</c> so the panel fills the safe area exactly
-        /// regardless of any prior offsets. Assigning re-applies on the next tick.
+        /// regardless of any prior offsets. Assigning re-applies on the next poll cycle.
         /// </summary>
         public bool ZeroOffsets
         {
             get => zeroOffsets;
-            set { zeroOffsets = value; SetDirty(); }
+            set { zeroOffsets = value; RequestApply(); }
         }
 
         protected override void Apply(Rect safeArea)
