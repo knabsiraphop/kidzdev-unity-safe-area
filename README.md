@@ -57,7 +57,7 @@ full screen.
 ```csharp
 var safe = panel.GetComponent<SafeArea>();
 safe.ConformX = false; // ignore left/right insets, keep top/bottom
-safe.ConformY = true;  // re-applies automatically on the next tick
+safe.ConformY = true;  // re-applies automatically on the next poll cycle
 ```
 
 **`ZeroOffsets` (robust setup)**
@@ -149,10 +149,10 @@ Rather than give every component its own `Update`, each `SafeAreaTracker`
 registers (while enabled) with a single internal `SafeAreaDriver` that polls
 **once per frame for all trackers** and calls `Apply` only when the resolved safe
 area, screen size, or orientation actually changes — or when an individual tracker
-is flagged dirty (an `OnValidate` inspector edit, or a `ConformX`/`ConformY`
-change). So N safe-area objects cost one poll per frame, not N.
+has a pending apply requested (an `OnValidate` inspector edit, or a
+`ConformX`/`ConformY` change). So N safe-area objects cost one poll per frame, not N.
 
-The driver ticks on `EditorApplication.update` in the editor (covering edit and
+The driver polls on `EditorApplication.update` in the editor (covering edit and
 play mode — both components are `[ExecuteAlways]`) and on a single hidden pump
 object in a player build. A first-frame `NaN` safe area (seen on some Samsung
 devices) is detected and skipped until valid.
