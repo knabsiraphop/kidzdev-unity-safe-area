@@ -10,12 +10,6 @@ Two complementary notch / safe-area components for Unity uGUI:
 Both share one change-tracking core and an in-editor device **simulator**, so you
 can preview notch layouts in the Game view without deploying to a phone.
 
-![Safe Area demo](Documentation~/preview.png)
-
-> The red bars are the `SafeAreaOutsideMask` filling the region *outside* the safe
-> area (coloured for contrast here); the panel within is the `SafeArea` content,
-> with the full-bleed background showing through behind it.
-
 ## Install
 
 Add via Package Manager → *Add package from git URL*, or edit
